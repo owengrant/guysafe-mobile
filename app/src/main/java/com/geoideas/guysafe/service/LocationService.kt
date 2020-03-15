@@ -7,15 +7,20 @@ import android.location.Location
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.geoideas.guysafe.R
 import com.geoideas.guysafe.location.Locator
 import com.geoideas.guysafe.model.repository.AppRepository
 import com.google.android.gms.maps.model.LatLng
 import kotlin.concurrent.thread
+import android.app.NotificationChannel
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.graphics.Color
+import com.geoideas.guysafe.R
+
 
 class LocationService : Service() {
 
-    private val NOTICE_CHANNEL_ID = "com.geoideas.guysafe.service.LocationService"
+    private val NOTICE_CHANNEL_ID = "com.geoideas.guysafe"
     private val SERVICE_NOTICE_ID = 1000
     private val ALERT_NOTICE_ID = 2000
 
@@ -24,6 +29,7 @@ class LocationService : Service() {
 
     override fun onCreate() {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        createNotificatioChannel()
         repo = AppRepository(this)
         startForeground(SERVICE_NOTICE_ID, createNotice().build())
         startTracker()
@@ -39,6 +45,22 @@ class LocationService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         return null;
+    }
+
+    private fun createNotificatioChannel() {
+        if (android.os.Build.VERSION.SDK_INT >=
+            android.os.Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel(
+                NOTICE_CHANNEL_ID,
+                "GuySafe", NotificationManager
+                    .IMPORTANCE_HIGH
+            )
+            notificationChannel.enableLights(true);
+            notificationChannel.setLightColor(Color.RED);
+            notificationChannel.enableVibration(true);
+            notificationChannel.setDescription("Notification from Mascot");
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
     }
 
     private fun createNotice(title: String = "GuySafe", text: String = "Keep Guyana Safe") =
@@ -65,7 +87,7 @@ class LocationService : Service() {
                         it.distanceTo(zoneLocation) >= zone.radius
                     }
                 if(inZones.isNotEmpty()) {
-                    val text = "Sanitize your hands, and don't touch your face."
+                    val text = "Clean your hands, and don't touch your face."
                     val notice = createNotice("Danger Zone Detected", text).setAutoCancel(true).build()
                     notificationManager.notify(ALERT_NOTICE_ID, notice)
                 }

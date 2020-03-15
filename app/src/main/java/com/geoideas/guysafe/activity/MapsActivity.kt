@@ -35,8 +35,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     val SMS_SEND_PERMISSIONS = 2
     val FILE_PERMISSIONS = 3
     var hasLocation = false
-    var hasSMS = false
-    var hasFile = false
     private lateinit var mMap: GoogleMap
     private lateinit var repo: AppRepository
     private val executors = Executors.newSingleThreadScheduledExecutor()
@@ -51,17 +49,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         repo = AppRepository(this)
         resolvePermissions()
         startService()
-
+        executors.scheduleAtFixedRate(::loadData, 5, 30, TimeUnit.SECONDS)
     }
 
     override fun onResume() {
         super.onResume()
-        executors.scheduleAtFixedRate(::loadData, 3, 30, TimeUnit.SECONDS)
+        executors.scheduleAtFixedRate(::loadData, 5, 30, TimeUnit.SECONDS)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        executors.scheduleAtFixedRate(::loadData, 3, 30, TimeUnit.SECONDS)
+
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
